@@ -32,32 +32,11 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <TextView
-        android:id="@+id/feedTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/textInputLayout"
-        android:text="Feed Title: " />
-
-    <TextView
-        android:id="@+id/feedDescription"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/feedTitle"
-        android:text="Feed Description: " />
-
-    <TextView
-        android:id="@+id/feedLink"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/feedDescription"
-        android:text="Feed Link: " />
-
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/feedLink"
+        android:layout_below="@id/textInputLayout"
         android:layout_marginTop="@dimen/activity_vertical_margin">
 
         <androidx.recyclerview.widget.RecyclerView

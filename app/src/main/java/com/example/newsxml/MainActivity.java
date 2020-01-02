@@ -1,66 +1,75 @@
 package com.example.newsxml;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
-import android.util.Xml;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import org.xmlpull.v1.XmlPullParser;
+import com.example.newsxml.Helpers.FeedParsers;
+import com.example.newsxml.RssFeedModel.RssFeedModelAbstract;
+
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
+import java.net.UnknownHostException;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
+public class MainActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private EditText mEditText;
-    private Button mFetchFeedButton;
     private SwipeRefreshLayout mSwipeLayout;
-    private TextView mFeedTitleTextView;
-    private TextView mFeedLinkTextView;
-    private TextView mFeedDescriptionTextView;
 
-    private List<RssFeedModel> mFeedModelList;
-    private String mFeedTitle;
-    private String mFeedLink;
-    private String mFeedDescription;
+    private List<RssFeedModelAbstract> mFeedModelList;
+
+    private SharedPreferences mSettings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mSettings = getSharedPreferences("MY_SETTINGS", Context.MODE_PRIVATE);
         mRecyclerView = findViewById(R.id.recyclerView);
         mEditText = findViewById(R.id.rssFeedEditText);
-        mFetchFeedButton = findViewById(R.id.fetchFeedButton);
         mSwipeLayout = findViewById(R.id.swipeRefreshLayout);
-        mFeedTitleTextView = findViewById(R.id.feedTitle);
-        mFeedDescriptionTextView = findViewById(R.id.feedDescription);
-        mFeedLinkTextView = findViewById(R.id.feedLink);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        mFetchFeedButton.setOnClickListener(new View.OnClickListener() {
+        if (checkPermission())
+            requestPermissionAndContinue();
+
+        mEditText.setText(mSettings.getString("LINK", ""));
+        new FetchFeedTask().execute((Void) null);
+
+        findViewById(R.id.fetchFeedButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                SharedPreferences.Editor editor = mSettings.edit();
+                editor.putString("LINK", mEditText.getText().toString());
+                editor.apply();
+
                 new FetchFeedTask().execute((Void) null);
             }
         });
@@ -72,92 +81,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public List<RssFeedModel> parseFeed(InputStream inputStream) throws XmlPullParserException, IOException {
-        String title = null;
-        String link = null;
-        String description = null;
-        boolean isItem = false;
-        List<RssFeedModel> items = new ArrayList<>();
-
-        try {
-            XmlPullParser xmlPullParser = Xml.newPullParser();
-            xmlPullParser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-            xmlPullParser.setInput(inputStream, null);
-
-            while (xmlPullParser.next() != XmlPullParser.END_DOCUMENT) {
-                int eventType = xmlPullParser.getEventType();
-
-                String name = xmlPullParser.getName();
-
-                if(name == null)
-                    continue;
-
-                if(eventType == XmlPullParser.END_TAG) {
-                    if(name.equalsIgnoreCase("item")) {
-                        isItem = false;
-                    }
-                    continue;
-                }
-
-                if (eventType == XmlPullParser.START_TAG) {
-                    if(name.equalsIgnoreCase("item")) {
-                        isItem = true;
-                        continue;
-                    }
-                }
-
-//                Log.d("MainActivity", "Parsing name => " + name);
-                String result = "";
-                if (xmlPullParser.next() == XmlPullParser.TEXT) {
-                    result = xmlPullParser.getText();
-                    xmlPullParser.nextTag();
-                }
-
-                if (name.equalsIgnoreCase("title")) {
-                    title = result;
-                } else if (name.equalsIgnoreCase("link")) {
-                    link = result;
-                } else if (name.equalsIgnoreCase("description")) {
-                    description = result;
-                }
-
-                if (title != null && link != null && description != null) {
-                    if(isItem) {
-                        RssFeedModel item = new RssFeedModel(title, link, description);
-                        items.add(item);
-                    }
-                    else {
-                        mFeedTitle = title;
-                        mFeedLink = link;
-                        mFeedDescription = description;
-                    }
-
-                    title = null;
-                    link = null;
-                    description = null;
-                    isItem = false;
-                }
-            }
-
-            return items;
-        } finally {
-            inputStream.close();
-        }
-    }
-
     public class FetchFeedTask extends AsyncTask<Void, Void, Boolean> {
         private String urlLink;
 
         @Override
         protected void onPreExecute() {
             mSwipeLayout.setRefreshing(true);
-            mFeedTitle = null;
-            mFeedLink = null;
-            mFeedDescription = null;
-            mFeedTitleTextView.setText("Feed Title: " + mFeedTitle);
-            mFeedDescriptionTextView.setText("Feed Description: " + mFeedDescription);
-            mFeedLinkTextView.setText("Feed Link: " + mFeedLink);
-            urlLink = mEditText.getText().toString();
+            urlLink = mSettings.getString("LINK", "");
         }
 
         @Override
@@ -166,17 +96,19 @@ public class MainActivity extends AppCompatActivity {
                 return false;
 
             try {
-                if(!urlLink.startsWith("http://") && !urlLink.startsWith("https://"))
-                    urlLink = "http://" + urlLink;
+                if (!urlLink.startsWith("http://") && !urlLink.startsWith("https://"))
+                    urlLink = "https://" + urlLink;
 
-                URL url = new URL(urlLink);
-                InputStream inputStream = url.openConnection().getInputStream();
-                mFeedModelList = parseFeed(inputStream);
+                final URL url = new URL(urlLink);
+                try {
+                    final InputStream inputStream = url.openConnection().getInputStream();
+                    mFeedModelList = FeedParsers.parseFeed(inputStream);
+                } catch (UnknownHostException exc) {
+                    mFeedModelList = FeedParsers.cacheParseFeed();
+                }
                 return true;
-            } catch (IOException e) {
-                Log.e(TAG, "Error", e);
-            } catch (XmlPullParserException e) {
-                Log.e(TAG, "Error", e);
+            } catch (IOException | XmlPullParserException e) {
+                e.printStackTrace();
             }
 
             return false;
@@ -187,16 +119,69 @@ public class MainActivity extends AppCompatActivity {
             mSwipeLayout.setRefreshing(false);
 
             if (success) {
-                mFeedTitleTextView.setText("Feed Title: " + mFeedTitle);
-                mFeedDescriptionTextView.setText("Feed Description: " + mFeedDescription);
-                mFeedLinkTextView.setText("Feed Link: " + mFeedLink);
-                // Fill RecyclerView
                 mRecyclerView.setAdapter(new RssFeedListAdapter(mFeedModelList, getBaseContext()));
             } else {
                 Toast.makeText(MainActivity.this,
                         "Enter a valid Rss feed url",
                         Toast.LENGTH_LONG).show();
             }
+        }
+    }
+
+    private static final int PERMISSION_REQUEST_CODE = 200;
+
+    private boolean checkPermission() {
+        return ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestPermissionAndContinue() {
+        if (ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, WRITE_EXTERNAL_STORAGE)
+                    && ActivityCompat.shouldShowRequestPermissionRationale(this, READ_EXTERNAL_STORAGE)) {
+                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
+                alertBuilder.setCancelable(true);
+                alertBuilder.setTitle("kek");
+                alertBuilder.setMessage("lol");
+                alertBuilder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+                    public void onClick(DialogInterface dialog, int which) {
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{WRITE_EXTERNAL_STORAGE
+                                , READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+                    }
+                });
+                AlertDialog alert = alertBuilder.create();
+                alert.show();
+            } else {
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{WRITE_EXTERNAL_STORAGE,
+                        READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (permissions.length > 0 && grantResults.length > 0) {
+
+                boolean flag = true;
+                for (int i = 0; i < grantResults.length; i++) {
+                    if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                        flag = false;
+                    }
+                }
+                if (!flag) {
+                    finish();
+                }
+
+            } else {
+                finish();
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 }
