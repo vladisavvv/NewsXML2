@@ -1,4 +1,4 @@
-package com.example.newsxml;
+package com.example.newsxml.adapters;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,9 +12,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.newsxml.Helpers.DownloadTask;
 import com.example.newsxml.Helpers.ReadImageTask;
 import com.example.newsxml.Helpers.ResultForGetNews;
+import com.example.newsxml.R;
 import com.example.newsxml.RssFeedModel.CacheRssFeedModel;
 import com.example.newsxml.RssFeedModel.OnlineRssFeedModel;
 import com.example.newsxml.RssFeedModel.RssFeedModelAbstract;
+import com.example.newsxml.activitys.WebViewActivity;
 
 import java.util.List;
 
@@ -31,8 +33,8 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
         }
     }
 
-    RssFeedListAdapter(final List<RssFeedModelAbstract> rssFeedModels,
-                       final Context context) {
+    public RssFeedListAdapter(final List<RssFeedModelAbstract> rssFeedModels,
+                              final Context context) {
         this.context = context;
         mRssFeedModels = rssFeedModels;
     }

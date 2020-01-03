@@ -1,4 +1,4 @@
-package com.example.newsxml;
+package com.example.newsxml.activitys;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -23,6 +23,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.newsxml.Helpers.FeedParsers;
+import com.example.newsxml.R;
+import com.example.newsxml.adapters.RssFeedListAdapter;
 import com.example.newsxml.RssFeedModel.RssFeedModelAbstract;
 
 import org.xmlpull.v1.XmlPullParserException;
