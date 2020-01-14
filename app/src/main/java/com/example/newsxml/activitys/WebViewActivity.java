@@ -37,7 +37,6 @@ public class WebViewActivity extends AppCompatActivity {
         if (getIntent().getExtras() != null && getIntent().getExtras().getString("page") != null) {
             webView.loadUrl(getIntent().getExtras().getString("page"));
         } else {
-//            webView.getSettings().setJavaScriptEnabled(true);
             webView.loadDataWithBaseURL(null, getIntent().getExtras().getString("data"), "text/html", "utf-8", null);
         }
     }
