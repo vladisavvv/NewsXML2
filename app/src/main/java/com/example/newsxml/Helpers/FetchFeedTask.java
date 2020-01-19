@@ -8,10 +8,10 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.example.newsxml.MainActivity;
 import com.example.newsxml.R;
-import com.example.newsxml.RssFeedListAdapter;
 import com.example.newsxml.RssFeedModel.RssFeedModelAbstract;
+import com.example.newsxml.activitys.MainActivity;
+import com.example.newsxml.adapters.RssFeedListAdapter;
 
 import org.xmlpull.v1.XmlPullParserException;
 
