@@ -30,9 +30,10 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
         this.position = position;
     }
 
-    private void saveImage(final Bitmap finalBitmap) {
+    private void saveImage(final Bitmap finalBitmap,
+                           final int hash) {
         final String root = Environment.getExternalStorageDirectory().toString();
-        final File file = new File(root, "image" + position + ".jpg");
+        final File file = new File(root,  hash+ ".jpg");
 
         try {
             FileOutputStream out = new FileOutputStream(file);
@@ -45,25 +46,10 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
         }
     }
 
-    private void saveText(final String text,
-                          final String prefixName) {
+    private void saveHtml(final String link,
+                          final int hash) {
         final String root = Environment.getExternalStorageDirectory().toString();
-        final File file = new File(root, prefixName + position + ".txt");
-
-        try {
-            final FileOutputStream out = new FileOutputStream(file);
-            out.write(text.getBytes());
-
-            out.flush();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void saveHtml(final String link) {
-        final String root = Environment.getExternalStorageDirectory().toString();
-        final File file = new File(root, "cache" + position + ".html");
+        final File file = new File(root, hash + ".html");
 
         try {
             final FileOutputStream out = new FileOutputStream(file);
@@ -100,10 +86,8 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
             final Bitmap bitmap = BitmapFactory.decodeStream(in);
 
             if (position < 10) {
-                saveImage(bitmap);
-                saveText(data[1], "title");
-                saveText(data[2], "description");
-                saveHtml(data[3]);
+                saveImage(bitmap, data[1].hashCode());
+                saveHtml(data[3], data[1].hashCode());
             }
 
             return new ResultForGetNews(data[1], data[2], bitmap);

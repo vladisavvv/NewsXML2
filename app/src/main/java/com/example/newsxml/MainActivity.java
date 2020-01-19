@@ -14,34 +14,18 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
 
-import com.example.newsxml.Helpers.FeedParsers;
-import com.example.newsxml.RssFeedModel.RssFeedModelAbstract;
-
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.util.List;
+import com.example.newsxml.Helpers.FetchFeedTask;
 
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class MainActivity extends AppCompatActivity {
-    private RecyclerView mRecyclerView;
     private EditText mEditText;
-    private SwipeRefreshLayout mSwipeLayout;
-
-    private List<RssFeedModelAbstract> mFeedModelList;
 
     private SharedPreferences mSettings;
 
@@ -51,9 +35,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mSettings = getSharedPreferences("MY_SETTINGS", Context.MODE_PRIVATE);
-        mRecyclerView = findViewById(R.id.recyclerView);
+        RecyclerView mRecyclerView = findViewById(R.id.recyclerView);
         mEditText = findViewById(R.id.rssFeedEditText);
-        mSwipeLayout = findViewById(R.id.swipeRefreshLayout);
+        SwipeRefreshLayout mSwipeLayout = findViewById(R.id.swipeRefreshLayout);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -61,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
             requestPermissionAndContinue();
 
         mEditText.setText(mSettings.getString("LINK", ""));
-        new FetchFeedTask().execute((Void) null);
 
         findViewById(R.id.fetchFeedButton).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,63 +53,17 @@ public class MainActivity extends AppCompatActivity {
                 editor.putString("LINK", mEditText.getText().toString());
                 editor.apply();
 
-                new FetchFeedTask().execute((Void) null);
+                new FetchFeedTask(MainActivity.this, mSettings.getString("LINK", "")).execute((Void) null);
             }
         });
         mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                new FetchFeedTask().execute((Void) null);
+                new FetchFeedTask(MainActivity.this, mSettings.getString("LINK", "")).execute((Void) null);
             }
         });
     }
 
-    public class FetchFeedTask extends AsyncTask<Void, Void, Boolean> {
-        private String urlLink;
-
-        @Override
-        protected void onPreExecute() {
-            mSwipeLayout.setRefreshing(true);
-            urlLink = mSettings.getString("LINK", "");
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... voids) {
-            if (TextUtils.isEmpty(urlLink))
-                return false;
-
-            try {
-                if (!urlLink.startsWith("http://") && !urlLink.startsWith("https://"))
-                    urlLink = "https://" + urlLink;
-
-                final URL url = new URL(urlLink);
-                try {
-                    final InputStream inputStream = url.openConnection().getInputStream();
-                    mFeedModelList = FeedParsers.parseFeed(inputStream);
-                } catch (UnknownHostException exc) {
-                    mFeedModelList = FeedParsers.cacheParseFeed();
-                }
-                return true;
-            } catch (IOException | XmlPullParserException e) {
-                e.printStackTrace();
-            }
-
-            return false;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean success) {
-            mSwipeLayout.setRefreshing(false);
-
-            if (success) {
-                mRecyclerView.setAdapter(new RssFeedListAdapter(mFeedModelList, getBaseContext()));
-            } else {
-                Toast.makeText(MainActivity.this,
-                        "Enter a valid Rss feed url",
-                        Toast.LENGTH_LONG).show();
-            }
-        }
-    }
 
     private static final int PERMISSION_REQUEST_CODE = 200;
 
@@ -163,20 +100,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (permissions.length > 0 && grantResults.length > 0) {
-
                 boolean flag = true;
-                for (int i = 0; i < grantResults.length; i++) {
-                    if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                for (int grantResult : grantResults)
+                    if (grantResult != PackageManager.PERMISSION_GRANTED)
                         flag = false;
-                    }
-                }
-                if (!flag) {
-                    finish();
-                }
 
+                if (!flag)
+                    finish();
             } else {
                 finish();
             }

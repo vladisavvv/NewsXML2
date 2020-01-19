@@ -1,5 +1,6 @@
 package com.example.newsxml.Helpers;
 
+import android.os.Environment;
 import android.util.Xml;
 
 import com.example.newsxml.RssFeedModel.CacheRssFeedModel;
@@ -9,30 +10,32 @@ import com.example.newsxml.RssFeedModel.RssFeedModelAbstract;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
-public class FeedParsers {
-    public static List<RssFeedModelAbstract> cacheParseFeed() {
-        final List<RssFeedModelAbstract> items = new ArrayList<>();
+class FeedParsers {
 
-        for (int i = 0; i < 10; ++i) {
-            final RssFeedModelAbstract item = new CacheRssFeedModel(
-                    "title" + i + ".txt",
-                    "cache" + i + ".html",
-                    "image" + i + ".jpg",
-                    "description" + i + ".txt"
-            );
+    private static void saveInputStream(final InputStream inputStream) throws IOException {
+        final String root = Environment.getExternalStorageDirectory().toString();
+        final File file = new File(root, "xml.xml");
+        final Scanner s = new Scanner(inputStream).useDelimiter("\\A");
 
-            items.add(item);
-        }
+        FileOutputStream out = new FileOutputStream(file);
+        out.write(s.next().getBytes());
 
-        return items;
+        out.flush();
+        out.close();
     }
 
-    public static List<RssFeedModelAbstract> parseFeed(InputStream inputStream) throws XmlPullParserException, IOException {
+    static List<RssFeedModelAbstract> parseFeed(final InputStream inputStream,
+                                                final URL url,
+                                                final boolean isCache) throws XmlPullParserException, IOException {
         String title = null;
         String link = null;
         String description = null;
@@ -85,8 +88,12 @@ public class FeedParsers {
                 }
 
                 if (title != null && link != null && description != null && linkToImage != null) {
-                    if (isItem)
-                        items.add(new OnlineRssFeedModel(title, link, description, linkToImage));
+                    if (isItem) {
+                        if (isCache)
+                            items.add(new OnlineRssFeedModel(title, link, description, linkToImage));
+                        else
+                            items.add(new CacheRssFeedModel(title, description));
+                    }
 
                     title = null;
                     link = null;
@@ -95,6 +102,9 @@ public class FeedParsers {
                     isItem = false;
                 }
             }
+
+            if (!isCache)
+                saveInputStream(url.openConnection().getInputStream());
 
             return items;
         } finally {

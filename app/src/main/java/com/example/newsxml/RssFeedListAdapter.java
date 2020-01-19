@@ -31,8 +31,8 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
         }
     }
 
-    RssFeedListAdapter(final List<RssFeedModelAbstract> rssFeedModels,
-                       final Context context) {
+    public RssFeedListAdapter(final List<RssFeedModelAbstract> rssFeedModels,
+                              final Context context) {
         this.context = context;
         mRssFeedModels = rssFeedModels;
     }
@@ -63,12 +63,12 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
             );
         } else {
             final CacheRssFeedModel cacheRssFeedModel = (CacheRssFeedModel) rssFeedModel;
-            System.out.println(cacheRssFeedModel.getPathToImage());
+
             (new ReadImageTask(holder.rssFeedView, resultForGetNews)).execute(
-                    cacheRssFeedModel.getPathToImage(),
-                    cacheRssFeedModel.getPathToTitle(),
-                    cacheRssFeedModel.getPathToDescription(),
-                    cacheRssFeedModel.getPathToHtml()
+                    cacheRssFeedModel.getTitle().hashCode() + ".jpg",
+                    cacheRssFeedModel.getTitle().hashCode() + ".html",
+                    cacheRssFeedModel.getTitle(),
+                    cacheRssFeedModel.getDescription()
             );
         }
 

@@ -39,26 +39,10 @@ public class ReadImageTask extends AsyncTask<String, Void, ResultForGetNews> {
             if (fis.read(data) == -1)
                 return null;
             fis.close();
-            final String title = new String(data);
-
-            file = new File(root, pathsToFile[2]);
-            fis = new FileInputStream(file);
-            data = new byte[fis.available()];
-            if (fis.read(data) == -1)
-                return null;
-            fis.close();
-            final String description = new String(data);
-
-            file = new File(root, pathsToFile[3]);
-            fis = new FileInputStream(file);
-            data = new byte[fis.available()];
-            if (fis.read(data) == -1)
-                return null;
-            fis.close();
             final String html = new String(data);
 
-            resultForGetNews.setDescription(description);
-            resultForGetNews.setTitle(title);
+            resultForGetNews.setDescription(pathsToFile[3]);
+            resultForGetNews.setTitle(pathsToFile[2]);
             resultForGetNews.setImageBitmap(bitmap);
             resultForGetNews.setHtml(html);
 
