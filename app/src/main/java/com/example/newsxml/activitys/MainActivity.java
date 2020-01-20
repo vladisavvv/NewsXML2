@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
             requestPermissionAndContinue();
 
         mEditText.setText(mSettings.getString("LINK", ""));
+        new FetchFeedTask(MainActivity.this, mSettings.getString("LINK", "")).execute((Void) null);
 
         findViewById(R.id.fetchFeedButton).setOnClickListener(new View.OnClickListener() {
             @Override

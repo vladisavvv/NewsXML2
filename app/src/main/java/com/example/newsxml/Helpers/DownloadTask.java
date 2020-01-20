@@ -28,6 +28,11 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
                         final int position) {
         this.view = new WeakReference<>(view);
         this.position = position;
+
+        ((TextView) view.findViewById(R.id.titleText)).setText("...");
+        ((TextView) view.findViewById(R.id.descriptionText)).setText(Html.fromHtml("..."));
+        ((ImageView) view.findViewById(R.id.imageView)).setImageBitmap(null);
+
     }
 
     private void saveImage(final Bitmap finalBitmap,
@@ -80,6 +85,7 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
        data[2] -> description text
        data[3] -> link to news
     */
+    @Override
     protected ResultForGetNews doInBackground(String... data) {
         try {
             final InputStream in = new java.net.URL(data[0]).openStream();
@@ -97,6 +103,7 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
         }
     }
 
+    @Override
     protected void onPostExecute(ResultForGetNews result) {
         if (result == null) {
             view.clear();

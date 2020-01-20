@@ -43,6 +43,8 @@ class FeedParsers {
         boolean isItem = false;
         final List<RssFeedModelAbstract> items = new ArrayList<>();
 
+        System.out.println(isCache);
+
         try {
             XmlPullParser xmlPullParser = Xml.newPullParser();
             xmlPullParser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -89,7 +91,7 @@ class FeedParsers {
 
                 if (title != null && link != null && description != null && linkToImage != null) {
                     if (isItem) {
-                        if (isCache)
+                        if (!isCache)
                             items.add(new OnlineRssFeedModel(title, link, description, linkToImage));
                         else
                             items.add(new CacheRssFeedModel(title, description));

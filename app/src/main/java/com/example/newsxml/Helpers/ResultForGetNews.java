@@ -35,19 +35,19 @@ public class ResultForGetNews {
         return html;
     }
 
-    public void setTitle(String title) {
+    void setTitle(String title) {
         this.title = title;
     }
 
-    public void setDescription(String description) {
+    void setDescription(String description) {
         this.description = description;
     }
 
-    public void setImageBitmap(Bitmap imageBitmap) {
+    void setImageBitmap(Bitmap imageBitmap) {
         this.imageBitmap = imageBitmap;
     }
 
-    public void setHtml(String html) {
+    void setHtml(String html) {
         this.html = html;
     }
 }
