@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.newsxml.R;
+import com.example.newsxml.activitys.MainActivity;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,7 +33,6 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
         ((TextView) view.findViewById(R.id.titleText)).setText("...");
         ((TextView) view.findViewById(R.id.descriptionText)).setText(Html.fromHtml("..."));
         ((ImageView) view.findViewById(R.id.imageView)).setImageBitmap(null);
-
     }
 
     private void saveImage(final Bitmap finalBitmap,
@@ -94,6 +94,8 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
             if (position < 10) {
                 saveImage(bitmap, data[1].hashCode());
                 saveHtml(data[3], data[1].hashCode());
+
+                MainActivity.getCachePreferences().edit().putBoolean(data[1].hashCode() + "", true).apply();
             }
 
             return new ResultForGetNews(data[1], data[2], bitmap);

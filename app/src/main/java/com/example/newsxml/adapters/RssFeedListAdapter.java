@@ -16,6 +16,7 @@ import com.example.newsxml.R;
 import com.example.newsxml.RssFeedModel.CacheRssFeedModel;
 import com.example.newsxml.RssFeedModel.OnlineRssFeedModel;
 import com.example.newsxml.RssFeedModel.RssFeedModelAbstract;
+import com.example.newsxml.activitys.MainActivity;
 import com.example.newsxml.activitys.WebViewActivity;
 
 import java.util.List;
@@ -57,12 +58,22 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
 
         if (rssFeedModel instanceof OnlineRssFeedModel) {
             final OnlineRssFeedModel onlineRssFeedModel = (OnlineRssFeedModel) rssFeedModel;
-            (new DownloadTask(holder.rssFeedView, position)).execute(
-                    onlineRssFeedModel.getLinkToImage(),
-                    onlineRssFeedModel.getTitle(),
-                    onlineRssFeedModel.getDescription(),
-                    onlineRssFeedModel.getLink()
-            );
+
+            if (MainActivity.getCachePreferences().getBoolean(onlineRssFeedModel.getTitle().hashCode() + "", false)) {
+                (new ReadImageTask(holder.rssFeedView, resultForGetNews)).execute(
+                        onlineRssFeedModel.getTitle().hashCode() + ".jpg",
+                        onlineRssFeedModel.getTitle().hashCode() + ".html",
+                        onlineRssFeedModel.getTitle(),
+                        onlineRssFeedModel.getDescription()
+                );
+            } else {
+                (new DownloadTask(holder.rssFeedView, position)).execute(
+                        onlineRssFeedModel.getLinkToImage(),
+                        onlineRssFeedModel.getTitle(),
+                        onlineRssFeedModel.getDescription(),
+                        onlineRssFeedModel.getLink()
+                );
+            }
         } else {
             final CacheRssFeedModel cacheRssFeedModel = (CacheRssFeedModel) rssFeedModel;
 

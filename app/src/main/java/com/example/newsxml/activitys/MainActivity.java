@@ -29,12 +29,18 @@ public class MainActivity extends AppCompatActivity {
     private EditText mEditText;
 
     private SharedPreferences mSettings;
+    private static SharedPreferences cachePreferences = null;
+
+    public static SharedPreferences getCachePreferences() {
+        return cachePreferences;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        cachePreferences = getSharedPreferences("CACHE", Context.MODE_PRIVATE);
         mSettings = getSharedPreferences("MY_SETTINGS", Context.MODE_PRIVATE);
         RecyclerView mRecyclerView = findViewById(R.id.recyclerView);
         mEditText = findViewById(R.id.rssFeedEditText);
@@ -51,9 +57,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.fetchFeedButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SharedPreferences.Editor editor = mSettings.edit();
-                editor.putString("LINK", mEditText.getText().toString());
-                editor.apply();
+                mSettings.edit().putString("LINK", mEditText.getText().toString()).apply();
 
                 new FetchFeedTask(MainActivity.this, mSettings.getString("LINK", "")).execute((Void) null);
             }

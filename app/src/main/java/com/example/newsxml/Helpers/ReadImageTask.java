@@ -24,6 +24,10 @@ public class ReadImageTask extends AsyncTask<String, Void, ResultForGetNews> {
                          final ResultForGetNews resultForGetNews) {
         this.view = new WeakReference<>(view);
         this.resultForGetNews = resultForGetNews;
+
+        ((TextView) view.findViewById(R.id.titleText)).setText("...");
+        ((TextView) view.findViewById(R.id.descriptionText)).setText(Html.fromHtml("..."));
+        ((ImageView) view.findViewById(R.id.imageView)).setImageBitmap(null);
     }
 
     protected ResultForGetNews doInBackground(final String... pathsToFile) {
