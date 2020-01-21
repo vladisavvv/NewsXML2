@@ -1,33 +1,23 @@
 package com.example.newsxml.RssFeedModel;
 
 public class OnlineRssFeedModel extends RssFeedModelAbstract {
-    private String title;
     private String link;
     private String linkToImage;
-    private String description;
 
     public OnlineRssFeedModel(final String title,
                               final String link,
                               final String description,
                               final String linkToImage) {
-        this.title = title;
-        this.link = link;
-        this.description = description;
-        this.linkToImage = linkToImage;
-    }
+        super(title, description);
 
-    public String getTitle() {
-        return title;
+        this.link = link;
+        this.linkToImage = linkToImage;
     }
 
     public String getLink() {
         return link;
     }
-
-    public String getDescription() {
-        return description;
-    }
-
+    
     public String getLinkToImage() {
         return linkToImage;
     }

@@ -19,6 +19,7 @@ import com.example.newsxml.RssFeedModel.RssFeedModelAbstract;
 import com.example.newsxml.activitys.MainActivity;
 import com.example.newsxml.activitys.WebViewActivity;
 
+import java.net.InetAddress;
 import java.util.List;
 
 public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.FeedModelViewHolder> {
@@ -92,7 +93,12 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
                 browserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
                 if (rssFeedModel instanceof OnlineRssFeedModel) {
-                    browserIntent.putExtra("page", ((OnlineRssFeedModel) rssFeedModel).getLink());
+                    if (isInternetAvailable())
+                        browserIntent.putExtra("page", ((OnlineRssFeedModel) rssFeedModel).getLink());
+                    else {
+                        browserIntent.putExtra("data", resultForGetNews.getHtml());
+                        context.startActivity(browserIntent);
+                    }
                     context.startActivity(browserIntent);
                 } else {
                     if (resultForGetNews.getHtml() != null) {
@@ -102,6 +108,17 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
                 }
             }
         });
+    }
+
+    public boolean isInternetAvailable() {
+        try {
+            InetAddress ipAddr = InetAddress.getByName("google.com");
+            //You can replace it with your name
+            return !ipAddr.equals("");
+
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override

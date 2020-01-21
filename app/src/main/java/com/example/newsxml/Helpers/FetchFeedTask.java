@@ -53,7 +53,7 @@ public class FetchFeedTask extends AsyncTask<Void, Void, Boolean> {
             try {
                 InputStream inputStream = url.openConnection().getInputStream();
                 mFeedModelList = FeedParsers.parseFeed(inputStream, url, false);
-            } catch (UnknownHostException | XmlPullParserException exc) { // TODO
+            } catch (UnknownHostException e) {
                 final String root = Environment.getExternalStorageDirectory().toString();
 
                 File file = new File(root, "xml.xml");

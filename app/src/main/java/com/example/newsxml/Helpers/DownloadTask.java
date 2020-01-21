@@ -14,6 +14,7 @@ import com.example.newsxml.activitys.MainActivity;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -51,8 +52,8 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
         }
     }
 
-    private void saveHtml(final String link,
-                          final int hash) {
+    private StringBuilder saveHtml(final String link,
+                                   final int hash) {
         final String root = Environment.getExternalStorageDirectory().toString();
         final File file = new File(root, hash + ".html");
 
@@ -74,8 +75,12 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
             out.write(html.toString().getBytes());
             out.flush();
             out.close();
+
+            return html;
         } catch (Exception e) {
             e.printStackTrace();
+
+            return null;
         }
     }
 
@@ -91,14 +96,17 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
             final InputStream in = new java.net.URL(data[0]).openStream();
             final Bitmap bitmap = BitmapFactory.decodeStream(in);
 
+            StringBuilder html = null;
             if (position < 10) {
                 saveImage(bitmap, data[1].hashCode());
-                saveHtml(data[3], data[1].hashCode());
+                html = saveHtml(data[3], data[1].hashCode());
 
                 MainActivity.getCachePreferences().edit().putBoolean(data[1].hashCode() + "", true).apply();
             }
 
-            return new ResultForGetNews(data[1], data[2], bitmap);
+            ResultForGetNews resultForGetNews = new ResultForGetNews(data[1], data[2], bitmap);
+            resultForGetNews.setHtml(html == null ? null : html.toString());
+            return resultForGetNews;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
