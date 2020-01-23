@@ -33,17 +33,27 @@ public class ReadImageTask extends AsyncTask<String, Void, ResultForGetNews> {
     protected ResultForGetNews doInBackground(final String... pathsToFile) {
         try {
             final String root = Environment.getExternalStorageDirectory().toString();
-            File file = new File(root, pathsToFile[0]);
-            InputStream in = new FileInputStream(file);
-            final Bitmap bitmap = BitmapFactory.decodeStream(in);
+            File file;
+            InputStream in;
 
-            file = new File(root, pathsToFile[1]);
-            FileInputStream fis = new FileInputStream(file);
-            byte[] data = new byte[fis.available()];
-            if (fis.read(data) == -1)
-                return null;
-            fis.close();
-            final String html = new String(data);
+            Bitmap bitmap = null;
+            if (pathsToFile[0] != null) {
+                file = new File(root, pathsToFile[0]);
+                in = new FileInputStream(file);
+                bitmap = BitmapFactory.decodeStream(in);
+            }
+
+            String html = null;
+
+            if (pathsToFile[1] != null) {
+                file = new File(root, pathsToFile[1]);
+                FileInputStream fis = new FileInputStream(file);
+                byte[] data = new byte[fis.available()];
+                if (fis.read(data) == -1)
+                    return null;
+                fis.close();
+                html = new String(data);
+            }
 
             resultForGetNews.setDescription(pathsToFile[3]);
             resultForGetNews.setTitle(pathsToFile[2]);
@@ -63,9 +73,13 @@ public class ReadImageTask extends AsyncTask<String, Void, ResultForGetNews> {
             return;
         }
 
-        ((TextView) view.get().findViewById(R.id.titleText)).setText(result.getTitle());
-        ((TextView) view.get().findViewById(R.id.descriptionText)).setText(Html.fromHtml(result.getDescription()));
-        ((ImageView) view.get().findViewById(R.id.imageView)).setImageBitmap(result.getImageBitmap());
+        try {
+            ((TextView) view.get().findViewById(R.id.titleText)).setText(result.getTitle());
+            ((TextView) view.get().findViewById(R.id.descriptionText)).setText(Html.fromHtml(result.getDescription()));
+            ((ImageView) view.get().findViewById(R.id.imageView)).setImageBitmap(result.getImageBitmap());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         view.clear();
     }

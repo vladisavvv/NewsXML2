@@ -4,42 +4,31 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Environment;
-import android.text.Html;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
 
-import com.example.newsxml.R;
+import com.example.newsxml.RssFeedModel.OnlineRssFeedModel;
+import com.example.newsxml.RssFeedModel.RssFeedModelAbstract;
 import com.example.newsxml.activitys.MainActivity;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
 
-public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
-    private WeakReference<View> view;
-    private int position;
+public class DownloadTask extends AsyncTask<String, Void, Void> {
+    private List<RssFeedModelAbstract> list;
 
-    public DownloadTask(final View view,
-                        final int position) {
-        this.view = new WeakReference<>(view);
-        this.position = position;
-
-        ((TextView) view.findViewById(R.id.titleText)).setText("...");
-        ((TextView) view.findViewById(R.id.descriptionText)).setText(Html.fromHtml("..."));
-        ((ImageView) view.findViewById(R.id.imageView)).setImageBitmap(null);
+    public DownloadTask(List<RssFeedModelAbstract> list) {
+        this.list = list;
     }
 
     private void saveImage(final Bitmap finalBitmap,
                            final int hash) {
         final String root = Environment.getExternalStorageDirectory().toString();
-        final File file = new File(root,  hash+ ".jpg");
+        final File file = new File(root,  hash + ".jpg");
 
         try {
             FileOutputStream out = new FileOutputStream(file);
@@ -91,39 +80,28 @@ public class DownloadTask extends AsyncTask<String, Void, ResultForGetNews> {
        data[3] -> link to news
     */
     @Override
-    protected ResultForGetNews doInBackground(String... data) {
-        try {
-            final InputStream in = new java.net.URL(data[0]).openStream();
-            final Bitmap bitmap = BitmapFactory.decodeStream(in);
+    protected Void doInBackground(String... data) {
+        if (list.size() > 0 && list.get(0) instanceof OnlineRssFeedModel) {
+            for (RssFeedModelAbstract i : list) {
+                OnlineRssFeedModel onlineRssFeedModel = (OnlineRssFeedModel) i;
 
-            StringBuilder html = null;
-            if (position < 10) {
-                saveImage(bitmap, data[1].hashCode());
-                html = saveHtml(data[3], data[1].hashCode());
+                if (MainActivity.getCachePreferences().getBoolean(onlineRssFeedModel.getTitle().hashCode() + "", false))
+                    continue;
 
-                MainActivity.getCachePreferences().edit().putBoolean(data[1].hashCode() + "", true).apply();
+                try {
+                    final InputStream in = new java.net.URL(onlineRssFeedModel.getLinkToImage()).openStream();
+                    final Bitmap bitmap = BitmapFactory.decodeStream(in);
+
+                    saveImage(bitmap, onlineRssFeedModel.getTitle().hashCode());
+                    saveHtml(onlineRssFeedModel.getLink(), onlineRssFeedModel.getTitle().hashCode());
+
+                    MainActivity.getCachePreferences().edit().putBoolean(onlineRssFeedModel.getTitle().hashCode() + "", true).apply();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
             }
-
-            ResultForGetNews resultForGetNews = new ResultForGetNews(data[1], data[2], bitmap);
-            resultForGetNews.setHtml(html == null ? null : html.toString());
-            return resultForGetNews;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
         }
-    }
-
-    @Override
-    protected void onPostExecute(ResultForGetNews result) {
-        if (result == null) {
-            view.clear();
-            return;
-        }
-
-        ((TextView) view.get().findViewById(R.id.titleText)).setText(result.getTitle());
-        ((TextView) view.get().findViewById(R.id.descriptionText)).setText(Html.fromHtml(result.getDescription()));
-        ((ImageView) view.get().findViewById(R.id.imageView)).setImageBitmap(result.getImageBitmap());
-
-        view.clear();
+        return null;
     }
 }

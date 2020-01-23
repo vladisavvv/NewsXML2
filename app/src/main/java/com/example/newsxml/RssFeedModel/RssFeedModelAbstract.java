@@ -1,6 +1,6 @@
 package com.example.newsxml.RssFeedModel;
 
-public class RssFeedModelAbstract {
+public abstract class RssFeedModelAbstract {
     private final String title;
     private final String description;
 

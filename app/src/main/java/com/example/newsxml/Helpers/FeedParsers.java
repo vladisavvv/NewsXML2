@@ -6,6 +6,7 @@ import android.util.Xml;
 import com.example.newsxml.RssFeedModel.CacheRssFeedModel;
 import com.example.newsxml.RssFeedModel.OnlineRssFeedModel;
 import com.example.newsxml.RssFeedModel.RssFeedModelAbstract;
+import com.example.newsxml.activitys.MainActivity;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -43,8 +44,6 @@ class FeedParsers {
         boolean isItem = false;
         final List<RssFeedModelAbstract> items = new ArrayList<>();
 
-        System.out.println(isCache);
-
         try {
             XmlPullParser xmlPullParser = Xml.newPullParser();
             xmlPullParser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -72,6 +71,7 @@ class FeedParsers {
                     }
                     if (name.equalsIgnoreCase("enclosure")) {
                         linkToImage = xmlPullParser.getAttributeValue(null, "url");
+                        continue;
                     }
                 }
 
@@ -87,13 +87,16 @@ class FeedParsers {
                     link = result;
                 } else if (name.equalsIgnoreCase("description")) {
                     description = result;
+
+                    if (result.indexOf('>') != -1)
+                        description = description.substring(result.indexOf('>') + 1);
                 }
 
                 if (title != null && link != null && description != null && linkToImage != null) {
                     if (isItem) {
                         if (!isCache)
                             items.add(new OnlineRssFeedModel(title, link, description, linkToImage));
-                        else
+                        else if (MainActivity.getCachePreferences().getBoolean(title.hashCode() + "", false))
                             items.add(new CacheRssFeedModel(title, description));
                     }
 

@@ -13,7 +13,6 @@ import com.example.newsxml.Helpers.DownloadTask;
 import com.example.newsxml.Helpers.ReadImageTask;
 import com.example.newsxml.Helpers.ResultForGetNews;
 import com.example.newsxml.R;
-import com.example.newsxml.RssFeedModel.CacheRssFeedModel;
 import com.example.newsxml.RssFeedModel.OnlineRssFeedModel;
 import com.example.newsxml.RssFeedModel.RssFeedModelAbstract;
 import com.example.newsxml.activitys.MainActivity;
@@ -39,6 +38,8 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
                               final Context context) {
         this.context = context;
         mRssFeedModels = rssFeedModels;
+
+        (new DownloadTask(rssFeedModels)).execute();
     }
 
     @NonNull
@@ -47,8 +48,7 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
                                                   final int type) {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_rss_feed, parent, false);
-        FeedModelViewHolder holder = new FeedModelViewHolder(v);
-        return holder;
+        return new FeedModelViewHolder(v);
     }
 
     @Override
@@ -57,32 +57,19 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
         final RssFeedModelAbstract rssFeedModel = mRssFeedModels.get(position);
         final ResultForGetNews resultForGetNews = new ResultForGetNews();
 
-        if (rssFeedModel instanceof OnlineRssFeedModel) {
-            final OnlineRssFeedModel onlineRssFeedModel = (OnlineRssFeedModel) rssFeedModel;
-
-            if (MainActivity.getCachePreferences().getBoolean(onlineRssFeedModel.getTitle().hashCode() + "", false)) {
-                (new ReadImageTask(holder.rssFeedView, resultForGetNews)).execute(
-                        onlineRssFeedModel.getTitle().hashCode() + ".jpg",
-                        onlineRssFeedModel.getTitle().hashCode() + ".html",
-                        onlineRssFeedModel.getTitle(),
-                        onlineRssFeedModel.getDescription()
-                );
-            } else {
-                (new DownloadTask(holder.rssFeedView, position)).execute(
-                        onlineRssFeedModel.getLinkToImage(),
-                        onlineRssFeedModel.getTitle(),
-                        onlineRssFeedModel.getDescription(),
-                        onlineRssFeedModel.getLink()
-                );
-            }
-        } else {
-            final CacheRssFeedModel cacheRssFeedModel = (CacheRssFeedModel) rssFeedModel;
-
+        if (MainActivity.getCachePreferences().getBoolean(rssFeedModel.getTitle().hashCode() + "", false)) {
             (new ReadImageTask(holder.rssFeedView, resultForGetNews)).execute(
-                    cacheRssFeedModel.getTitle().hashCode() + ".jpg",
-                    cacheRssFeedModel.getTitle().hashCode() + ".html",
-                    cacheRssFeedModel.getTitle(),
-                    cacheRssFeedModel.getDescription()
+                    rssFeedModel.getTitle().hashCode() + ".jpg",
+                    rssFeedModel.getTitle().hashCode() + ".html",
+                    rssFeedModel.getTitle(),
+                    rssFeedModel.getDescription()
+            );
+        } else {
+            (new ReadImageTask(holder.rssFeedView, resultForGetNews)).execute(
+                    null,
+                    null,
+                    rssFeedModel.getTitle(),
+                    rssFeedModel.getDescription()
             );
         }
 
@@ -93,13 +80,13 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
                 browserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
                 if (rssFeedModel instanceof OnlineRssFeedModel) {
-                    if (isInternetAvailable())
+                    if (isInternetAvailable()) {
                         browserIntent.putExtra("page", ((OnlineRssFeedModel) rssFeedModel).getLink());
-                    else {
+                        context.startActivity(browserIntent);
+                    } else if (resultForGetNews.getHtml() != null) {
                         browserIntent.putExtra("data", resultForGetNews.getHtml());
                         context.startActivity(browserIntent);
                     }
-                    context.startActivity(browserIntent);
                 } else {
                     if (resultForGetNews.getHtml() != null) {
                         browserIntent.putExtra("data", resultForGetNews.getHtml());
@@ -110,11 +97,11 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
         });
     }
 
-    public boolean isInternetAvailable() {
+    private boolean isInternetAvailable() {
         try {
             InetAddress ipAddr = InetAddress.getByName("google.com");
             //You can replace it with your name
-            return !ipAddr.equals("");
+            return !ipAddr.toString().equals("");
 
         } catch (Exception e) {
             return false;
