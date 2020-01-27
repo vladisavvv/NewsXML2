@@ -28,11 +28,21 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 public class MainActivity extends AppCompatActivity {
     private EditText mEditText;
 
+    private static boolean runDownload = false;
+
     private SharedPreferences mSettings;
     private static SharedPreferences cachePreferences = null;
 
     public static SharedPreferences getCachePreferences() {
         return cachePreferences;
+    }
+
+    public static boolean isRunDownload() {
+        return runDownload;
+    }
+
+    public static void setRunDownload(boolean runDownload) {
+        MainActivity.runDownload = runDownload;
     }
 
     @Override

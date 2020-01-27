@@ -39,7 +39,10 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
         this.context = context;
         mRssFeedModels = rssFeedModels;
 
-        (new DownloadTask(rssFeedModels)).execute();
+        if (!MainActivity.isRunDownload()) {
+            MainActivity.setRunDownload(true);
+            (new DownloadTask(rssFeedModels)).execute();
+        }
     }
 
     @NonNull

@@ -102,6 +102,9 @@ public class DownloadTask extends AsyncTask<String, Void, Void> {
 
             }
         }
+
+        MainActivity.setRunDownload(false);
+
         return null;
     }
 }
