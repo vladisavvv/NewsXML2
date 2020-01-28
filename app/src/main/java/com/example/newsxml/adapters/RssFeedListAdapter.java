@@ -103,9 +103,7 @@ public class RssFeedListAdapter extends RecyclerView.Adapter<RssFeedListAdapter.
     private boolean isInternetAvailable() {
         try {
             InetAddress ipAddr = InetAddress.getByName("google.com");
-            //You can replace it with your name
             return !ipAddr.toString().equals("");
-
         } catch (Exception e) {
             return false;
         }

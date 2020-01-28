@@ -9,16 +9,7 @@ public class ResultForGetNews {
     private String html;
 
     public ResultForGetNews() {}
-
-    ResultForGetNews(final String title,
-                     final String description,
-                     final Bitmap imageBitmap) {
-        this.title = title;
-        this.description = description;
-        this.imageBitmap = imageBitmap;
-        this.html = null;
-    }
-
+    
     String getTitle() {
         return title;
     }
